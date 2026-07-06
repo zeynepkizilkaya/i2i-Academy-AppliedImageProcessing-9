@@ -49,9 +49,25 @@ for contour in contours:
 # Draw detected plate
 if plate is not None:
 
+    x, y, w, h = cv2.boundingRect(plate)
+
+    # Add a small padding around the plate
+    padding = 10
+
+    x1 = max(x - padding, 0)
+    y1 = max(y - padding, 0)
+
+    x2 = min(x + w + padding, image.shape[1])
+    y2 = min(y + h + padding, image.shape[0])
+
+    # Crop the license plate
+    plate_image = image[y1:y2, x1:x2]
+
+    # Draw rectangle on original image
     cv2.drawContours(image, [plate], -1, (0, 255, 0), 3)
 
     cv2.imshow("Detected License Plate", image)
+    cv2.imshow("Cropped Plate", plate_image)
 
 else:
 
