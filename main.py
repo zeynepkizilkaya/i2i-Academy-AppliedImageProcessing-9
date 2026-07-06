@@ -1,6 +1,6 @@
 import cv2
 
-# Load image
+# upload the image
 image = cv2.imread("car.jpg")
 
 if image is None:
@@ -8,14 +8,17 @@ if image is None:
 else:
     print("The picture is uploaded successfully.")
 
-    # Convert image to grayscale
+    # convert image to the grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    # Apply Gaussian Blur
+    # apply gaussian blur
     blur = cv2.GaussianBlur(gray, (5, 5), 0)
 
-    # Show blurred image
-    cv2.imshow("Blurred Image", blur)
+    # detect edges using canny
+    edges = cv2.Canny(blur, 50, 150)
+
+    # show edge image
+    cv2.imshow("Canny Edge Detection", edges)
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()
