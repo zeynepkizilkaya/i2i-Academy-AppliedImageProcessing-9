@@ -1,14 +1,37 @@
 import cv2
 import easyocr
+from tkinter import Tk
+from tkinter.filedialog import askopenfilename
+
+print("=" * 45)
+print(" Automatic License Plate Recognition ")
+print("=" * 45)
+print("Please select a car image...\n")
+
+# Open file dialog
+Tk().withdraw()
+
+file_path = askopenfilename(
+    title="Select a car image",
+    filetypes=[
+        ("Image Files", "*.jpg *.jpeg *.png")
+    ]
+)
+
+if not file_path:
+    print("No image selected.")
+    exit()
 
 # Load image
-image = cv2.imread("car.jpg")
+image = cv2.imread(file_path)
 
 if image is None:
     print("Image not found!")
     exit()
 
-print("The picture is uploaded successfully.")
+print("Image loaded successfully.")
+
+# Initialize OCR
 reader = easyocr.Reader(['en'])
 
 # Convert to grayscale
@@ -21,16 +44,25 @@ blur = cv2.GaussianBlur(gray, (5, 5), 0)
 edges = cv2.Canny(blur, 75, 200)
 
 # Find contours
-contours, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+contours, _ = cv2.findContours(
+    edges,
+    cv2.RETR_LIST,
+    cv2.CHAIN_APPROX_SIMPLE
+)
 
 plate = None
 image_height = image.shape[0]
 
+# Search for a license plate candidate
 for contour in contours:
 
     perimeter = cv2.arcLength(contour, True)
 
-    approx = cv2.approxPolyDP(contour, 0.02 * perimeter, True)
+    approx = cv2.approxPolyDP(
+        contour,
+        0.02 * perimeter,
+        True
+    )
 
     if len(approx) == 4:
 
@@ -48,12 +80,11 @@ for contour in contours:
             plate = approx
             break
 
-# Draw detected plate
 if plate is not None:
 
     x, y, w, h = cv2.boundingRect(plate)
 
-    # Add a small padding around the plate
+    # Add padding around the detected plate
     padding = 10
 
     x1 = max(x - padding, 0)
@@ -62,51 +93,71 @@ if plate is not None:
     x2 = min(x + w + padding, image.shape[1])
     y2 = min(y + h + padding, image.shape[0])
 
-    # Crop the license plate
+    # Crop plate
     plate_image = image[y1:y2, x1:x2]
 
-    # Preprocess the cropped plate for OCR
-    gray_plate = cv2.cvtColor(plate_image, cv2.COLOR_BGR2GRAY)
+    # Preprocess for OCR
+    gray_plate = cv2.cvtColor(
+        plate_image,
+        cv2.COLOR_BGR2GRAY
+    )
 
     _, threshold_plate = cv2.threshold(
-      gray_plate,
-      0,
-      255,
-      cv2.THRESH_BINARY + cv2.THRESH_OTSU
-      
-)
-    # Remove small noise using Morphological Opening
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+        gray_plate,
+        0,
+        255,
+        cv2.THRESH_BINARY + cv2.THRESH_OTSU
+    )
+
+    # Remove small noise
+    kernel = cv2.getStructuringElement(
+        cv2.MORPH_RECT,
+        (3, 3)
+    )
 
     clean_plate = cv2.morphologyEx(
         threshold_plate,
         cv2.MORPH_OPEN,
         kernel
-)
-    
-    # Read text from the cropped plate
+    )
+
+    # OCR
     result = reader.readtext(
         clean_plate,
-        allowlist='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-)
+        allowlist="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    )
 
-    print("\nDetected Text:")
+    if result:
 
-    for detection in result:
-      print(detection[1])
+        print("\nDetected License Plate:")
 
-    # Draw rectangle on original image
-    cv2.drawContours(image, [plate], -1, (0, 255, 0), 3)
+        for detection in result:
+            print(detection[1])
 
+    else:
+
+        print("\nNo text detected.")
+
+    # Draw detected contour
+    cv2.drawContours(
+        image,
+        [plate],
+        -1,
+        (0, 255, 0),
+        3
+    )
+
+    # Show results
     cv2.imshow("Detected License Plate", image)
-    
+    cv2.imshow("Cropped Plate", plate_image)
     cv2.imshow("Clean Plate", clean_plate)
 
 else:
 
     print("License plate not found.")
-
     cv2.imshow("Detected License Plate", image)
 
 cv2.waitKey(0)
 cv2.destroyAllWindows()
+
+print("\nProcess completed successfully.")
