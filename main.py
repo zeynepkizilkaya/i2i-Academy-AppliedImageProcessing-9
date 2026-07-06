@@ -64,8 +64,31 @@ if plate is not None:
 
     # Crop the license plate
     plate_image = image[y1:y2, x1:x2]
+
+    # Preprocess the cropped plate for OCR
+    gray_plate = cv2.cvtColor(plate_image, cv2.COLOR_BGR2GRAY)
+
+    _, threshold_plate = cv2.threshold(
+      gray_plate,
+      0,
+      255,
+      cv2.THRESH_BINARY + cv2.THRESH_OTSU
+      
+)
+    # Remove small noise using Morphological Opening
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+
+    clean_plate = cv2.morphologyEx(
+        threshold_plate,
+        cv2.MORPH_OPEN,
+        kernel
+)
+    
     # Read text from the cropped plate
-    result = reader.readtext(plate_image)
+    result = reader.readtext(
+        clean_plate,
+        allowlist='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+)
 
     print("\nDetected Text:")
 
@@ -76,7 +99,8 @@ if plate is not None:
     cv2.drawContours(image, [plate], -1, (0, 255, 0), 3)
 
     cv2.imshow("Detected License Plate", image)
-    cv2.imshow("Cropped Plate", plate_image)
+    
+    cv2.imshow("Clean Plate", clean_plate)
 
 else:
 
