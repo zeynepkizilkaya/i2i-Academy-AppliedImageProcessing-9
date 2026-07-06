@@ -1,18 +1,18 @@
 import cv2
 
-# reads the image
+# Load image
 image = cv2.imread("car.jpg")
 
-# if can not then error
 if image is None:
-    print("The picture is not found!")
+    print("Image not found!")
 else:
-    print("The picture is uploaded succesfully.")
+    print("The picture is uploaded successfully.")
 
-    # show the image at the screen
-    cv2.imshow("Car Image", image)
+    # Convert image to grayscale
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    # wait till someone pushes a button
+    # Show grayscale image
+    cv2.imshow("Grayscale Image", gray)
+
     cv2.waitKey(0)
-
     cv2.destroyAllWindows()
