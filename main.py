@@ -22,6 +22,7 @@ edges = cv2.Canny(blur, 75, 200)
 contours, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
 plate = None
+image_height = image.shape[0]
 
 for contour in contours:
 
@@ -29,15 +30,18 @@ for contour in contours:
 
     approx = cv2.approxPolyDP(contour, 0.02 * perimeter, True)
 
-    # Check if contour has 4 corners
     if len(approx) == 4:
 
         x, y, w, h = cv2.boundingRect(approx)
 
         aspect_ratio = w / float(h)
+        area = cv2.contourArea(contour)
 
-        # Typical license plate ratio
-        if 2.5 < aspect_ratio < 6:
+        if (
+            2.5 < aspect_ratio < 6
+            and area > 2000
+            and y > image_height * 0.4
+        ):
 
             plate = approx
             break
