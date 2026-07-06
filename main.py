@@ -1,4 +1,5 @@
 import cv2
+import easyocr
 
 # Load image
 image = cv2.imread("car.jpg")
@@ -8,6 +9,7 @@ if image is None:
     exit()
 
 print("The picture is uploaded successfully.")
+reader = easyocr.Reader(['en'])
 
 # Convert to grayscale
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -62,6 +64,13 @@ if plate is not None:
 
     # Crop the license plate
     plate_image = image[y1:y2, x1:x2]
+    # Read text from the cropped plate
+    result = reader.readtext(plate_image)
+
+    print("\nDetected Text:")
+
+    for detection in result:
+      print(detection[1])
 
     # Draw rectangle on original image
     cv2.drawContours(image, [plate], -1, (0, 255, 0), 3)
